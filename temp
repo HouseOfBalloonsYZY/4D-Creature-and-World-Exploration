@@ -1,0 +1,105 @@
+// /**
+//  * FourDimensionalSpiralShell.pde
+//  * A 4D Shell constructed by extruding a growing hyper-circle along a 4D Logarithmic Spiral.
+//  */
+
+// class FourDSpiralShell extends Shape4D {  
+
+//   // High resolution for long spiral
+//   int tSteps = 3000;      
+//   int vSteps = 24;       
+  
+//   // Constants for Path
+//   float GR = (1.0 + sqrt(5.0)) / 2.0; 
+//   float E = 2.718281828;              
+//   float P = PI;                       
+  
+//   float w1 = GR;  
+//   float w2 = E;   
+//   float w3 = P;   
+  
+//   // Growth
+//   float a = 0.05;    
+//   float b = 0.06;    
+//   float tubeGrow = 0.06; 
+//   float tubeScale = 0.6;
+  
+//   float maxT = 90.0; 
+  
+//   FourDSpiralShell() {
+//     super();
+//     generateGeometry();
+//   }
+  
+//   void generateGeometry() {
+//     for (int i = 0; i < tSteps; i++) {
+//       float t = map(i, 0, tSteps-1, 0, maxT);
+      
+//       P4Vector center = getSpiralPoint(t);
+      
+//       float delta = 0.01;
+//       P4Vector nextP = getSpiralPoint(t + delta);
+      
+//       float tx = nextP.x - center.x;
+//       float ty = nextP.y - center.y;
+//       float tz = nextP.z - center.z;
+//       float tw = nextP.w - center.w;
+//       float tMag = sqrt(tx*tx + ty*ty + tz*tz + tw*tw);
+//       tx /= tMag; ty /= tMag; tz /= tMag; tw /= tMag;
+      
+//       float ax = 1, ay = 0, az = 0, aw = 0;
+//       if (abs(tx) > 0.9) { ax = 0; ay = 1; }
+      
+//       float dot1 = ax*tx + ay*ty + az*tz + aw*tw;
+//       float n1x = ax - dot1 * tx; float n1y = ay - dot1 * ty; float n1z = az - dot1 * tz; float n1w = aw - dot1 * tw;
+//       float n1Mag = sqrt(n1x*n1x + n1y*n1y + n1z*n1z + n1w*n1w);
+//       n1x /= n1Mag; n1y /= n1Mag; n1z /= n1Mag; n1w /= n1Mag;
+      
+//       float bx = 0, by = 1, bz = 0, bw = 0;
+//       if (ay == 1) { by = 0; bz = 1; }
+//       float dotT = bx*tx + by*ty + bz*tz + bw*tw;
+//       float t2x = bx - dotT * tx; float t2y = by - dotT * ty; float t2z = bz - dotT * tz; float t2w = bw - dotT * tw;
+      
+//       float dotN1 = t2x*n1x + t2y*n1y + t2z*n1z + t2w*n1w;
+//       float n2x = t2x - dotN1 * n1x; float n2y = t2y - dotN1 * n1y; float n2z = t2z - dotN1 * n1z; float n2w = t2w - dotN1 * n1w;
+//       float n2Mag = sqrt(n2x*n2x + n2y*n2y + n2z*n2z + n2w*n2w);
+//       n2x /= n2Mag; n2y /= n2Mag; n2z /= n2Mag; n2w /= n2Mag;
+      
+//       float rTube = (a * exp(tubeGrow * t)) * tubeScale;
+      
+//       for (int j = 0; j < vSteps; j++) {
+//         float v = map(j, 0, vSteps, 0, TWO_PI);
+//         float cosV = cos(v); float sinV = sin(v);
+//         float px = center.x + rTube * (cosV * n1x + sinV * n2x);
+//         float py = center.y + rTube * (cosV * n1y + sinV * n2y);
+//         float pz = center.z + rTube * (cosV * n1z + sinV * n2z);
+//         float pw = center.w + rTube * (cosV * n1w + sinV * n2w);
+//         addVertex(px, py, pz, pw);
+//       }
+//     }
+    
+//     // Edges
+//     int startIdx = 0;
+//     for (int i = 0; i < tSteps; i++) {
+//       for (int j = 0; j < vSteps; j++) {
+//         int current = startIdx + i * vSteps + j;
+//         int nextV   = startIdx + i * vSteps + ((j + 1) % vSteps);
+//         addEdge(current, nextV);
+//         if (i < tSteps - 1) {
+//           int nextT = startIdx + (i + 1) * vSteps + j;
+//           addEdge(current, nextT);
+//         }
+//       }
+//     }
+//   }
+  
+//   P4Vector getSpiralPoint(float t) {
+//     float r = a * exp(b * t);
+//     float theta = w1 * t; float phi = w2 * t; float chi = w3 * t;
+//     float x = r * cos(chi);
+//     float y = r * sin(chi) * cos(phi);
+//     float z = r * sin(chi) * sin(phi) * cos(theta);
+//     float w = r * sin(chi) * sin(phi) * sin(theta);
+//     return new P4Vector(x, y, z, w);
+//   }
+// }
