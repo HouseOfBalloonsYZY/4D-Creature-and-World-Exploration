@@ -15,13 +15,17 @@ class P4Vector {
   P4Vector copy() { return new P4Vector(x, y, z, w); }
 }
 
-class Matrix4 {
+class Matrix4 
+{
   float[][] m = new float[4][4];
   Matrix4() { identity(); }
-  void identity() {
+  void identity() 
+  {
     for(int i=0; i<4; i++) for(int j=0; j<4; j++) m[i][j] = (i==j)?1:0;
   }
-  Matrix4 mult(Matrix4 B) {
+
+  Matrix4 mult(Matrix4 B) 
+  {
     Matrix4 res = new Matrix4();
     for(int i=0; i<4; i++) for(int j=0; j<4; j++) {
       float sum = 0;
@@ -30,7 +34,10 @@ class Matrix4 {
     }
     return res;
   }
-  P4Vector transform(P4Vector v) {
+
+  // P4 Vector Multiply
+  P4Vector transform(P4Vector v) 
+  {
     return new P4Vector(
       m[0][0]*v.x + m[0][1]*v.y + m[0][2]*v.z + m[0][3]*v.w,
       m[1][0]*v.x + m[1][1]*v.y + m[1][2]*v.z + m[1][3]*v.w,
@@ -40,7 +47,8 @@ class Matrix4 {
   }
 }
 
-class Shape4D {
+class Shape4D 
+{
   ArrayList<P4Vector> localVertices; 
   ArrayList<int[]> edges; 
   Matrix4 orientation; 

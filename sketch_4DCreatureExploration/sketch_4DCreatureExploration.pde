@@ -1,14 +1,21 @@
+// import java.awt.GraphicsDevice;
+// import java.awt.GraphicsEnvironment;
+
 /**
  * FourDimensionalCreatureExploration
  * Main Sketch for exploring 4D Geometries.
  */
 
+// Global Objects
 Shape4D object4D;       
 LocalCoordinateSystem coordSys; 
 Slider[] sliders = new Slider[6];
 VerticalSlider zoomSlider;
 RangeSlider rangeSlider; 
 Dropdown objectMenu;    
+
+// OSC Controller
+OSCController osc; // NEW
 
 Button resetButton;
 Button randomBtn;
@@ -41,10 +48,19 @@ RangeSlider activeRangeInput = null;
 MultiplierSlider activeMultInput = null;
 
 void setup() {
-  size(1600, 1000, P3D); 
-  smooth(8);
+  // size(1600, 1000, P3D);
+  // smooth(8);
+
+
+  // surface.setResizable(true);
+
   
-  object4D = new FourDShellChamber(); // Default to new chamber
+  fullScreen(P3D,2);
+  
+  // Initialize OSC (Localhost, Port 12001)
+  osc = new OSCController(this, "127.0.0.1", 12001); // NEW
+  
+  object4D = new FourDSpiralShell(); 
   coordSys = new LocalCoordinateSystem(); 
   
   int startX = 30;
@@ -59,19 +75,20 @@ void setup() {
   m2Slider = new MultiplierSlider(startX + 500, startY + 60, 200, 20, "m2 (E)");
   m3Slider = new MultiplierSlider(startX + 500, startY + 120, 200, 20, "m3 (PI)");
   
-  zoomSlider = new VerticalSlider(width - 80, height - 300, 30, 200, 5.0, 100.0, "Zoom");
+  // Create UI elements (positions will be updated in draw())
+  zoomSlider = new VerticalSlider(0, 0, 30, 200, 5.0, 100.0, "Zoom");
   zoomSlider.val = 50.0; 
   
-  resetButton   = new Button(startX, height - 80, 120, 40, "RESET VIEW");
-  randomBtn     = new Button(startX + 140, height - 80, 140, 40, "Random Rotation");
-  autoBtn       = new Button(startX + 300, height - 80, 160, 40, "Auto Rotation: Off");
-  speedBtn      = new Button(startX + 480, height - 80, 120, 40, "Speed: Slow"); 
-  axesToggleBtn = new Button(startX + 620, height - 80, 140, 40, "Show Axes: ON");
+  resetButton   = new Button(0, 0, 120, 40, "RESET VIEW");
+  randomBtn     = new Button(0, 0, 140, 40, "Random Rotation");
+  autoBtn       = new Button(0, 0, 160, 40, "Auto Rotation: Off");
+  speedBtn      = new Button(0, 0, 120, 40, "Speed: Slow"); 
+  axesToggleBtn = new Button(0, 0, 140, 40, "Show Axes: ON");
   
-  selectiveBtn  = new Button(startX + 780, height - 80, 160, 40, "Selective: OFF");
-  logParamsBtn  = new Button(startX + 950, height - 80, 160, 40, "Params: OFF");
+  selectiveBtn  = new Button(0, 0, 160, 40, "Selective: ON");
+  logParamsBtn  = new Button(0, 0, 160, 40, "Params: ON");
   
-  rangeSlider   = new RangeSlider(startX + 780, height - 140, 300, 30, 2000);
+  rangeSlider   = new RangeSlider(0, 0, 300, 30, 2000);
   
   String[] menuOptions = {
     "-- Regular Polytopes --",
@@ -91,7 +108,7 @@ void setup() {
     "4D Logarithmic Spiral",
     "4D Spiral Shell", 
     "-- Creatures --",
-    "4D Shell Chamber", // <--- NEW
+    "4D Shell Chamber",
     "True 4D Creature",
     "Creature Test 2 (Composite)" 
   };
@@ -113,8 +130,8 @@ void resetSimulation() {
   selectiveBtn.label = "Selective: ON";
   
   m1Slider.val = 1.0; m2Slider.val = 1.0; m3Slider.val = 1.0;
-  showLogParams = false;
-  logParamsBtn.label = "Params: OFF";
+  showLogParams = true;
+  logParamsBtn.label = "Params: ON";
 
   for (int i = 0; i < 6; i++) {
     sliders[i].val = 0;
@@ -131,7 +148,6 @@ void resetSimulation() {
   applyGlobalDeltaRotation(1, -isoRotY);
   applyGlobalDeltaRotation(2, isoRotX);
   
-  // Sync multipliers if applicable
   if (object4D instanceof FourDSpiral) ((FourDSpiral)object4D).updateMultipliers(1.0, 1.0, 1.0);
   if (object4D instanceof FourDSpiralShell) ((FourDSpiralShell)object4D).updateMultipliers(1.0, 1.0, 1.0);
   if (object4D instanceof FourDShellChamber) ((FourDShellChamber)object4D).updateMultipliers(1.0, 1.0, 1.0);
@@ -161,8 +177,8 @@ void switchObject(String name) {
   
   isSelectiveDisplay = true;
   selectiveBtn.label = "Selective: ON";
-  showLogParams = false;
-  logParamsBtn.label = "Params: OFF";
+  showLogParams = true;
+  logParamsBtn.label = "Params: ON";
 }
 
 void applyGlobalDeltaRotation(int planeIdx, float angle) {
@@ -172,6 +188,42 @@ void applyGlobalDeltaRotation(int planeIdx, float angle) {
 
 void draw() {
   background(20);
+  
+  // Update UI positions based on current window size
+  int startX = 30;
+  zoomSlider.x = width - 80;
+  zoomSlider.y = height - 300;
+  
+  resetButton.x = startX;
+  resetButton.y = height - 80;
+  
+  randomBtn.x = startX + 140;
+  randomBtn.y = height - 80;
+  
+  autoBtn.x = startX + 300;
+  autoBtn.y = height - 80;
+  
+  speedBtn.x = startX + 480;
+  speedBtn.y = height - 80;
+  
+  axesToggleBtn.x = startX + 620;
+  axesToggleBtn.y = height - 80;
+  
+  selectiveBtn.x = startX + 780;
+  selectiveBtn.y = height - 80;
+  
+  logParamsBtn.x = startX + 950;
+  logParamsBtn.y = height - 80;
+  
+  rangeSlider.x = startX + 780;
+  rangeSlider.y = height - 140;
+  
+  // Update OSC
+  // We pass the current object and the range slider (only valid if selective is ON, but passed anyway)
+  // Range Slider logic determines what data is meaningful.
+  boolean isLog = (object4D instanceof FourDSpiral || object4D instanceof FourDSpiralShell || object4D instanceof FourDShellChamber);
+  RangeSlider sliderToSend = (isLog && isSelectiveDisplay) ? rangeSlider : null;
+  osc.update(object4D, sliderToSend); // NEW
   
   zoomSlider.update();
   zoomSlider.display();
@@ -200,8 +252,6 @@ void draw() {
     }
   }
   
-  // Logic for Logarithmic Parameters
-  boolean isLog = (object4D instanceof FourDSpiral || object4D instanceof FourDSpiralShell || object4D instanceof FourDShellChamber);
   if (isLog && showLogParams) {
     m1Slider.update(); m1Slider.display();
     m2Slider.update(); m2Slider.display();
@@ -271,9 +321,16 @@ void draw() {
     selectiveBtn.update();
     selectiveBtn.display();
     
-    if (isSelectiveDisplay) {
+    // We only update/display rangeSlider here if needed, but it's handled in the render block logic above
+    // Wait, rangeSlider.update() needs to be called even if drawing 2D UI overlay.
+    // The previous logic called it inside pushMatrix (3D context) which is wrong for 2D UI input.
+    // Let's fix that.
+    if (isSelectiveDisplay) 
+    {
       rangeSlider.update();
-      rangeSlider.display();
+       // Logic handled below in correct 2D context
+       rangeSlider.display();
+      //  rangeSlider.update();
     }
     
     logParamsBtn.update();
